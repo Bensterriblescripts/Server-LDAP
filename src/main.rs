@@ -18,8 +18,9 @@ fn main() {
     /*******************************/
     let ldap_host = "ldap://192.168.0.111:389";
     let ldap_user = "cn=admin,dc=paradisecoffee,dc=cafe";
-    let ldap_pass = "password";
+    let ldap_pass = "";
     let ldap_config = [ldap_host, ldap_user, ldap_pass];
+    
 
     /*******************************/
     /*    Functions                */
