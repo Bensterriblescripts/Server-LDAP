@@ -18,7 +18,7 @@ fn main() {
     /*******************************/
     let ldap_host = "ldap://192.168.0.111:389";
     let ldap_user = "cn=admin,dc=paradisecoffee,dc=cafe";
-    let ldap_pass = "";
+    let ldap_pass = "Worldwarcraft3!@";
     let ldap_config = [ldap_host, ldap_user, ldap_pass];
     
 
@@ -73,7 +73,7 @@ fn main() {
 /*********************************/
 fn ldap_searchbase(ldap_config: [&str; 3], ldap_location: &str, ldap_filter: &str, ldap_attr: [&str; 3]) -> Result<Vec<SearchEntry>> {
     let mut ldap = LdapConn::new(&ldap_config[0])?;
-    ldap.simple_bind(&ldap_config[1], &ldap_config[2])?;
+    let bind = ldap.simple_bind(&ldap_config[1], &ldap_config[2])?.success()?;
     let (rs, _res) = ldap.search(
         &ldap_location,
         Scope::Base,
@@ -90,7 +90,7 @@ fn ldap_searchbase(ldap_config: [&str; 3], ldap_location: &str, ldap_filter: &st
 }
 fn ldap_searchsub(ldap_config: [&str; 3], ldap_location: &str, ldap_filter: &str, ldap_attr: [&str; 3]) -> Result<Vec<SearchEntry>> {
     let mut ldap = LdapConn::new(&ldap_config[0])?;
-    ldap.simple_bind(&ldap_config[1], &ldap_config[2])?;
+    let bind = ldap.simple_bind(&ldap_config[1], &ldap_config[2])?.success()?;
     let (rs, _res) = ldap.search(
         &ldap_location,
         Scope::Subtree,
