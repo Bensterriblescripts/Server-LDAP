@@ -1,0 +1,8 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hashmap = "0.0.1"
+ldap3 = "0.11.3"
