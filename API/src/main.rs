@@ -34,4 +34,7 @@ async fn searchbase (Query(params): Query<SearchParams>) -> impl IntoResponse {
 
     Html(format!("DN: {dn}, Filter: {filter}"))
 
+    // Check results with a query like this
+    // http://localhost:3000/search?dn="Test"&filter="Test"
+
 }
