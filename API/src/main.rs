@@ -14,7 +14,7 @@ use ldap3::result::Result;
 async fn main() {
 
     // Endpoint
-    let routes = Router::new().route("/search", get(searchbase));
+    let routes = Router::new().route("/search", get(search));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("--> Listening on {addr}\n");
     axum::Server::bind(&addr)
@@ -32,22 +32,49 @@ struct SearchParams {
     filter: Option<String>,
     attributes: Option<Vec<String>>,
 }
-async fn searchbase (Json(params): Json<SearchParams>) -> impl IntoResponse {
+// API
+async fn search (Json(params): Json<SearchParams>) -> impl IntoResponse {
 
-    // Print to our server's console
     println!("->> {:<12} - Search - {params:?}", "Handler");
 
-    // Set our LDAP config
+    let ldap_dn = params.dn.as_deref().unwrap_or("cn=admin,dc=paradisecoffee,dc=cafe");
+    let ldap_filter = params.filter.as_deref().unwrap_or("sn=*");
+    let ldap_attr: Vec<String> = params.attributes.unwrap_or(Vec::new());
+
+    let results = ldap_search(&ldap_dn, &ldap_filter, ldap_attr);
+    for result in results {
+        for record in result {
+            for (attr_name, attr_values) in &record.attrs {
+                print!(" Attr:{:?} Value:{:?}, ", attr_name, attr_values);
+            }
+        }
+    }
+
+    // Return some HTML
+    // Html(format!("DN: {ldap_dn}\n\nFilter: {ldap_filter}\n\nAttributes: {ldap_attr:?}"))
+}
+//LDAP
+async fn ldap_search (ldap_dn: &str, ldap_filter: &str, ldap_attr: Vec<String>) -> Result<Vec<SearchEntry>> {
     let ldap_host = "ldap://192.168.0.111:389";
     let ldap_user = "cn=admin,dc=paradisecoffee,dc=cafe";
     let ldap_pass = "Worldwarcraft3!@";
-    // Receive our JSON parameters
-    let dn = params.dn.as_deref().unwrap_or("cn=admin,dc=paradisecoffee,dc=cafe");
-    let filter = params.filter.as_deref().unwrap_or("sn=*");
-    let attr: Vec<String> = params.attributes.unwrap_or(Vec::new());
+    let ldap_config = [ldap_host, ldap_user, ldap_pass];
 
-    // Return some HTML
-    Html(format!("DN: {dn}\n\nFilter: {filter}\n\nAttributes: {attr:?}"))
+    let mut ldap = LdapConn::new(&ldap_config[0])?;
+    let bind = ldap.simple_bind(&ldap_config[1], &ldap_config[2])?.success()?;
+    let (rs, _res) = ldap.search(
+        &ldap_dn,
+        Scope::Base,
+        &ldap_filter,
+        &ldap_attr
+    )?.success()?;
+    let search_entries: Vec<SearchEntry> = rs
+        .into_iter()
+        .map(|entry| SearchEntry::construct(entry))
+        .collect();
+    
+    ldap.unbind()?;
+    Ok(search_entries)
 }
 
 /*******************************/
